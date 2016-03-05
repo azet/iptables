@@ -270,6 +270,12 @@ iptables_exit_error(enum xtables_exittype status, const char *msg, ...)
 {
 	va_list args;
 
+        /* if iptables is run as non-root we bail-out early */
+        if (getuid() != 0) {
+            fprintf(stderr,
+                "iptables requires root privileges to have any effect on netfilter.\n");
+            goto error;
+        }
 	va_start(args, msg);
 	fprintf(stderr, "%s v%s: ", prog_name, prog_vers);
 	vfprintf(stderr, msg, args);
@@ -280,6 +286,7 @@ iptables_exit_error(enum xtables_exittype status, const char *msg, ...)
 	if (status == VERSION_PROBLEM)
 		fprintf(stderr,
 			"Perhaps iptables or your kernel needs to be upgraded.\n");
+error:
 	/* On error paths, make sure that we don't leak memory */
 	xtables_free_opts(1);
 	exit(status);
